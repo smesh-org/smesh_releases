@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="214"
+   name=""
+   committed-date="2008-01-16T20:12:05.797224Z"
+   url="svn+ssh://cnds.jhu.edu/storage/svn/smesh/trunk/smesh_proxy/stdutil/buildtools"
+   last-author="nrivera"
+   kind="dir"
+   revision="219"/>
+<entry
+   committed-rev="214"
+   name="mkinstalldirs"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="25d1582beeeb893bda2abcf1bc34d28e"
+   last-author="nrivera"
+   kind="file"
+   prop-time="2008-01-16T20:11:48.000000Z"/>
+<entry
+   committed-rev="214"
+   name="fixpaths"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="6470c634f9f38b6d1ce5da90b4edc58d"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="config.guess"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="b9778cf89d1ad1f330127facd868f80d"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="mdoc2man.pl"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="b621cd5a3fcd05e6223793abf11a4ef7"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="config.sub"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="065f2a89e954f4ea8c7c0cdf0f707241"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="aclocal.m4"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="48fef7af2fe4aafcec23e2dedda6d2f9"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="install-sh"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="5afe8eb5573965dfb58378e4e46f3813"
+   last-author="nrivera"
+   kind="file"
+   prop-time="2008-01-16T20:11:48.000000Z"/>
+</wc-entries>

@@ -1,0 +1,226 @@
+#!/bin/bash
+
+################# SMesh Build Script ###################
+
+# This tool allows you to compile / cross-compile to:
+#    local  = local machine 
+#    mipsel = MIPS little endian (e.g., wrt54)
+#    mips   = MIPS big endian (e.g., meraki)
+#    arm    = ARM big-endian (e.g., ligowave, intel-xscale)
+# The install directory will contain all files needed once 
+# compilation is finished.  
+
+
+
+################# CHANGE ###################
+
+BUILD_SMESH=1
+BUILD_SPINES=1
+BUILD_PCAP=1
+BUILD_TOOLS=0
+
+# CROSS COMPILE? ... TARGETS = mipsel, mips, arm, local
+TARGET=local
+
+if [ $TARGET == "mipsel" ]; then
+    # MIPS LITTLE ENDIAN -- WRT54 
+    export CROSS="/opt/brcm/hndtools-mipsel-uclibc/bin"
+    #export CROSS="$CROSS;/opt/brcm/hndtools-mipsel-linux/bin"
+    export PREFIX="mipsel-uclibc"
+    export CONFIGURE_OPTIONS=" -host=mipsel --with-pcap=linux "
+elif [ $TARGET == "mips" ]; then
+    # MIPS BIG ENDIAN -- MERAKI 
+    export CROSS="/opt/crosstool/staging_dir_mips/bin"
+    export PREFIX="mips-linux-uclibc"
+    export CONFIGURE_OPTIONS=" -host=mips --with-pcap=linux "
+elif [ $TARGET == "arm" ]; then
+    # ARM -- Intel IXP -- Ligowave 
+    # export CROSS="/opt/crosstool/staging_dir_armeb/usr/bin"
+    export CROSS="/local/svn-openwrt/trunk/staging_dir/toolchain-armeb_gcc4.1.2/bin"
+    export PREFIX="armeb-linux-uclibc"
+    export CONFIGURE_OPTIONS=" -host=arm --with-pcap=linux "
+else
+    TARGET=local
+    export CONFIGURE_OPTIONS=" "
+fi
+
+################# UNLIKELY TO CHANGE ###################
+
+
+# build dirs
+export BASE=`pwd`
+export SMESH=smesh_proxy
+export SPINES=spines
+export PCAP=libpcap
+
+
+if [ $TARGET != "local" ]; then
+    export PATH=$CROSS:$PATH
+    export ARCH_DEFINE="-DARCH_PC_LINUX"
+    export ac_cv_linux_vers=2.4.20
+    
+    #Could also use "-static"
+    export CC=$CROSS/$PREFIX-gcc
+    export LD=$CROSS/$PREFIX-ld
+    export AR=$CROSS/$PREFIX-ar
+    export RANLIB=$CROSS/$PREFIX-ranlib
+    export STRIP=$CROSS/$PREFIX-strip
+    export CXX=$CROSS/$PREFIX-g++
+    export "LDD=$CROSS/$PREFIX-ldd -static"
+    
+    alias gcc=$CROSS/$PREFIX-gcc
+    alias ar=$CROSS/$PREFIX-ar
+    alias as=$CROSS/$PREFIX-as
+    alias c++=$CROSS/$PREFIX-c++
+    alias g++=$CROSS/$PREFIX-g++
+    alias c++filt=$CROSS/$PREFIX-c++filt
+    alias cpp=$CROSS/$PREFIX-cpp
+    alias gccbug=$CROSS/$PREFIX-gccbug
+    alias gcov=$CROSS/$PREFIX-gcov
+    alias ld="$CROSS/$PREFIX-ld -static"
+    alias nm=$CROSS/$PREFIX-nm
+    alias objcopy=$CROSS/$PREFIX-objcopy
+    alias ranlib=$CROSS/$PREFIX-ranlib
+    alias readelf=$CROSS/$PREFIX-readelf
+    alias size=$CROSS/$PREFIX-size
+    alias strings=$CROSS/$PREFIX-strings
+    alias strip=$CROSS/$PREFIX-strip
+else
+    # No Cross-compiler
+    export CC=gcc
+    export LD=gcc
+    export RANLIB=ranlib
+    export STRIP=strip
+fi
+
+echo " "
+
+if [ $BUILD_PCAP -eq 1 ]; then
+    cd $BASE
+    if [ ! -d $BASE/$PCAP ]; then
+        wget --tries=2  --timeout=5 "http://www.tcpdump.org/release/libpcap-0.9.4.tar.gz"
+        if [ $? -ne 0 ]; then
+            wget --tries=2 --timeout=5 "http://www.at.tcpdump.org/release/libpcap-0.9.4.tar.gz"
+            if [ $? -ne 0 ]; then
+                echo "Download Error"
+                exit 1
+            fi
+        fi
+        tar -xzf libpcap-0.9.4.tar.gz
+        rm libpcap-0.9.4.tar.gz
+        mv libpcap-0.9.4 $PCAP
+    fi
+    cd $BASE/$PCAP
+    make clean
+    make distclean
+    ./configure $CONFIGURE_OPTIONS
+    make
+    if [ $? -ne 0 ]; then
+        echo "Build Error"
+        exit 1
+    fi
+fi
+
+
+if [ $BUILD_SPINES -eq 1 ]; then
+    cd $BASE
+    if [ ! -d $BASE/$SPINES ]; then
+        echo "Please download Spines 3.1 or later from www.spines.org, and name the directory spines"
+        echo " "
+        exit 1
+    fi
+    cd $BASE/$SPINES
+    make distclean
+    ./configure $CONFIGURE_OPTIONS
+    make
+    if [ $? -ne 0 ]; then
+        echo "Build Error"
+        exit 1
+    fi
+fi
+
+
+if [ $BUILD_SMESH -eq 2 ]; then
+    cd $BASE/$SMESH
+    make distclean
+    cd stdutil; make distclean;
+    ./configure $CONFIGURE_OPTIONS
+    make; cd src; make
+    cd $BASE/$SMESH
+    make
+    if [ $? -ne 0 ]; then
+        echo "Build Error"
+        exit 1
+    fi
+fi
+if [ $BUILD_SMESH -eq 1 ]; then
+    cd $BASE/$SMESH
+    make clean
+    cd stdutil/src; make clean; make distclean;
+    cd ..; make clean; make distclean;
+    ./configure $CONFIGURE_OPTIONS
+    make; cd src; make
+    cd $BASE/$SMESH
+    make
+    if [ $? -ne 0 ]; then
+        echo "Build Error"
+        exit 1
+    fi
+fi
+
+
+if [ $BUILD_TOOLS -eq 1 ]; then
+    cd $BASE/tools
+    if [ ! -d $BASE/tools/iperf ]; then
+        wget --tries=2  --timeout=5 "http://dast.nlanr.net/Projects/Iperf/iperf-1.7.0-source.tar.gz"
+        if [ $? -ne 0 ]; then
+            echo "Download Error"
+            exit 1
+        fi
+        tar -xzf iperf-1.7.0-source.tar.gz
+        rm -f iperf-1.7.0-source.tar.gz
+        mv iperf-1.7.0 iperf
+    fi
+    cd iperf
+    if [ -f Makefile ]; then
+        make clean
+        make distclean
+    fi
+    cd $BASE/tools/iperf/cfg
+    ./configure $CONFIGURE_OPTIONS
+    cd ..
+    make 
+    if [ $? -ne 0 ]; then
+        echo "Build Error"
+        exit 1
+    fi
+fi
+
+
+# Copy necessary files into install directory
+echo " "
+echo " "
+if [ $BUILD_SMESH -eq 1 -o $BUILD_SPINES -eq 1 ]; then
+    # make empty install directory for executables
+    if [ -d $BASE/install ]; then
+        rm -f $BASE/install/*
+    else
+        mkdir install
+    fi
+    if [ -d $BASE/install ]; then
+        cp $BASE/$SMESH/smesh_proxy $BASE/install
+        cp $BASE/$SPINES/spines $BASE/install
+        cp $BASE/$SMESH/README $BASE/install
+        cp $BASE/scripts/* $BASE/install
+        $STRIP $BASE/install/smesh_proxy
+        $STRIP $BASE/install/spines
+        echo "SMesh build is ready on install directory"
+    else
+        echo "Problem accessing install directory"
+    fi
+else
+        echo "Install directory left intact.  If you meant to rebuild SMesh, please modify build script"
+fi
+echo " "
+
+

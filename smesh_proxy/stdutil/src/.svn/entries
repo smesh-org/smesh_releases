@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="214"
+   name=""
+   committed-date="2008-01-16T20:12:05.797224Z"
+   url="svn+ssh://cnds.jhu.edu/storage/svn/smesh/trunk/smesh_proxy/stdutil/src"
+   last-author="nrivera"
+   kind="dir"
+   revision="219"/>
+<entry
+   committed-rev="214"
+   name="stdhash.c"
+   text-time="2008-01-18T23:36:19.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="c34160e18f497453a49c94e547295b8d"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stdarr.c"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="19ed74892f7a69e31920a85277e0098c"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="Makefile.in"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="8732a4f2070d29f2b63c611107c4a17d"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stdthread.c"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="73fe7bb65221e294ebb54da40d0c3985"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stdcarr.c"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="7a9a3e526cc277b5701c8b687e5592c8"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stderror.c"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="9c47f85c8694d30b3dd0aa89d92e9ef9"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stdskl.c"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="9ecb6e0001cebb8c042cf6dcd4b0211a"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stdfd.c"
+   text-time="2008-01-16T20:11:35.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="1ce7f3a72d336951a85a600059db92f8"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stddll.c"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="b7c85a33d2713df207618991224ca6b0"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stdit.c"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="2607eea6f650178c8e18a35c3d3952e0"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   name="stdutil"
+   kind="dir"/>
+<entry
+   committed-rev="214"
+   name="stdutil.c"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="f6264e2cbaedf2fc1bcd421b9b3b18f0"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stdtime.c"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="f25d9bd060295faf3868533a2e2180c7"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   name="stdtest"
+   kind="dir"/>
+</wc-entries>

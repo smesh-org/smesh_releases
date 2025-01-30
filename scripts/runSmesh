@@ -1,0 +1,250 @@
+#!/bin/sh
+
+# SMesh
+# Copyright (c) 2005 - 2008 Johns Hopkins University
+# All rights reserved.
+#
+# SMesh is licensed under the SMESH Non-Commercial License
+# You may only use this software in compliance with the License.
+# A copy of the License can be found at the LICENSE file provided with
+# your distribution or by contacting us.
+#
+# SMesh is developed at the Distributed Systems and Networks Lab,
+# The Johns Hopkins University.
+#
+# Creators:
+#    Yair Amir                 yairamir@dsn.jhu.edu
+#    Claudiu Danilov           claudiu@dsn.jhu.edu
+#    Raluca Musaloiu-Elefteri  ralucam@dsn.jhu.edu
+#    Nilo Rivera               nrivera@dsn.jhu.edu
+#
+# Major Contributors:
+#    Michael Hilsdale          mhilsdale@dsn.jhu.edu
+#    Michael Kaplan            kaplan@dsn.jhu.edu
+#
+# WWW:     www.smesh.org      www.dsn.jhu.edu
+# Contact: smesh_at_smesh.org
+#
+# This product uses Spines.
+# For more information about Spines, see http://www.spines.org
+#
+# This product uses software developed by Spread Concepts LLC
+# for use in the Spread toolkit.
+# For more information about Spread, see http://www.spread.org
+
+
+#########################################################
+# GET SMESH CONFIGURATION
+#########################################################
+. /jffs/smesh.conf
+
+killall dnsmasq 2>/dev/null
+
+#########################################################
+# STOP.  YOU SHOULD NOT HAVE TO MODIFY ANYTHING AFTER 
+# HERE UNLESS MODIFYING IPTABLES / NAT POLICY.
+#########################################################
+
+# Get status of smesh processes
+killall -0 spines 2>/dev/null
+SPINES_DOWN=$?
+killall -0 smesh_proxy 2> /dev/null
+SMESH_DOWN=$?
+
+RUNSMESH_LOG=/tmp/runSmesh.log
+echo "RUNSMESH LOG" > $RUNSMESH_LOG
+
+# If I dont need to restart a process
+if [ $SPINES_DOWN -eq 0 -a $SMESH_DOWN -eq 0 ]; then
+    # Keep so many minutes of log...depends on cron frequency
+    if [ $LOG != "/dev/null" -a $MULTILOG -eq 1 ]; then
+        cp $LOG.2 $LOG.3 2>/dev/null
+        cp $LOG $LOG.2 2>/dev/null
+        echo " " > $LOG
+    fi
+    exit;
+fi
+      
+# Get IP address of specified devices using ifconfig
+MESHIP=`$IFCONFIG $MESHIF | grep "inet addr:" | sed -e "s/.*inet addr:\([^ ]*\).*/\1/"`
+WANIP=`$IFCONFIG $WANIF | grep "inet addr:" | sed -e "s/.*inet addr:\([^ ]*\).*/\1/"`
+MESH_NODES_NET="`echo $MESHIP | cut -d '.' -f 1-3`.0"
+MESH_NODE_ID="`echo $MESHIP | cut -d '.' -f 4`"
+MESH_NET="`echo $MESHIP | cut -d '.' -f 1`.0.0.0"
+
+# Start sshd for remote access through wan port
+ps | grep dropbear | grep -q $SSHD_PORT
+if [ $? -ne 0 -a $SMESH_IGW -eq 1 ]; then
+    $SSHD -p $SSHD_PORT
+fi
+
+
+# Get DNS Information from /etc/resolv.conf
+DNS=" "
+if [ -r /etc/resolv.conf ]; then
+    while read DNSline; do 
+        echo $DNSline | grep -q nameserver
+        if [ $? -eq 0 ]; then
+            DNSentry=`echo $DNSline | cut -d " " -f 2`
+            DNS="$DNS -dns $DNSentry"
+        fi
+    done < /etc/resolv.conf
+fi
+
+
+# Get a few options
+if [ $SMESH_DHCP -eq 1 ]; then SMESH_OPTIONS="$SMESH_OPTIONS -dhcp 120"; fi
+if [ $DEBUG -gt 0 ]; then SMESH_OPTIONS="$SMESH_OPTIONS -debug $DEBUG"; fi
+if [ -n "$DMZ" ]; then SMESH_OPTIONS="$SMESH_OPTIONS -dmz $DMZ"; fi
+if [ -n "$MONIF" ]; then SMESH_OPTIONS="$SMESH_OPTIONS -rssi_if $MONIF"; fi
+if [ -n "$MIN_LINK_RSSI" ]; then SPINES_OPTIONS="$SPINES_OPTIONS -Wif $MONIF -Wts $MIN_LINK_RSSI"; fi
+if [ $HYBRID -eq 1 -a $SMESH_IGW -eq 1 ]; then SMESH_OPTIONS="$SMESH_OPTIONS -hybrid"; fi
+
+
+
+# If spines is down and I can flush iptables
+if [ $SPINES_DOWN -ne 0 -a $FLUSH_IPTABLES -eq 1 ]; then
+    $IPTABLES -F
+    $IPTABLES -t nat -F
+    $IPTABLES -t mangle -F
+    $IPTABLES -t nat -F
+    $IPTABLES -P INPUT ACCEPT
+    $IPTABLES -P OUTPUT ACCEPT
+    $IPTABLES -P FORWARD ACCEPT
+    # Clear route entries and add standard route entries
+    $IP route flush root $MESHIP/8 dev $MESHIF
+    $IP route add $MESH_NET/8 dev $MESHIF
+fi  
+
+# DHPC Request Packets are local, and since we use fake 
+# dhcp server ip address, make sure is not forwarded.
+$IPTABLES -A FORWARD -p udp -d $MESH_NET/8 --dport 67 -j DROP >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+
+# Set Firewall if file is provided
+FW_FileName=`echo $FIREWALL | cut -d " " -f 2`
+if [ $KERNEL -ne 0 -a -n "$FW_FileName" -a -s "$FW_FileName" ]; then
+    $IPTABLES -P FORWARD DROP
+    while read FWline; do 
+        $IPTABLES -A FORWARD -s $FWline/32 -j ACCEPT >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+    done < $FW_FileName
+    $IPTABLES -A FORWARD -s $MESH_NODES_NET/24 -j ACCEPT  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+    $IPTABLES -A FORWARD -d $MESH_NET/8 -j ACCEPT  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+fi
+
+# Set DMZ routing if available
+if [ $KERNEL -ne 0 -a -n "$DMZ" ]; then
+    $IPTABLES -D PREROUTING -t nat -p tcp --dport ! $SSHD_PORT -d $WANIP -j DNAT --to-destination $DMZ > /dev/null 2>/dev/null
+    $IPTABLES -A PREROUTING -t nat -p tcp --dport ! $SSHD_PORT -d $WANIP -j DNAT --to-destination $DMZ >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+fi
+
+
+if [ $KERNEL -eq 2 ]; then
+    # Turn on multihop
+    $IPTABLES -D POSTROUTING -t mangle -j MULTIHOP  > /dev/null 2>/dev/null
+    $IPTABLES -A POSTROUTING -t mangle -j MULTIHOP  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+
+    # If packet comes from the internet directly to me, I am the source
+    if [ $SMESH_IGW -eq 1 ]; then
+        $IPTABLES -D PREROUTING -t mangle -d $WANIP -j IPID --set-ipid $MESH_NODE_ID  > /dev/null 2>/dev/null
+        $IPTABLES -D PREROUTING -t mangle -d $WANIP -j TOS --set-tos 2  > /dev/null 2>/dev/null
+        $IPTABLES -I PREROUTING 1 -t mangle -d $WANIP -j IPID --set-ipid $MESH_NODE_ID  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+        $IPTABLES -I PREROUTING 2 -t mangle -d $WANIP -j TOS --set-tos 2  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+    
+    fi
+    
+    # Make sure mesh-node to mesh-node communication goes through main route table
+    $IPTABLES -D PREROUTING -t mangle -d $MESH_NODES_NET/24 -m tos --tos 0 -j TOS --set-tos 2  > /dev/null 2>/dev/null
+    $IPTABLES -A PREROUTING -t mangle -d $MESH_NODES_NET/24 -m tos --tos 0 -j TOS --set-tos 2  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+
+    # If the tos is not set, set it and mark myself as the source
+    $IPTABLES -D PREROUTING -t mangle -d $MESH_NET/8 -m tos --tos 0 -j IPID --set-ipid $MESH_NODE_ID > /dev/null 2>/dev/null
+    $IPTABLES -D PREROUTING -t mangle -d $MESH_NET/8 -m tos --tos 0 -j TOS --set-tos 2  > /dev/null 2>/dev/null
+    $IPTABLES -A PREROUTING -t mangle -d $MESH_NET/8 -m tos --tos 0 -j IPID --set-ipid $MESH_NODE_ID  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+    $IPTABLES -A PREROUTING -t mangle -d $MESH_NET/8 -m tos --tos 0 -j TOS --set-tos 2  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+    
+    # Same in output chain, for non-mesh destinations
+    $IPTABLES -D OUTPUT -t mangle -d $MESH_NODES_NET/24 -m tos --tos 0 -j TOS --set-tos 2  > /dev/null 2>/dev/null
+    $IPTABLES -A OUTPUT -t mangle -d $MESH_NODES_NET/24 -m tos --tos 0 -j TOS --set-tos 2  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+    #
+    $IPTABLES -D OUTPUT -t mangle -d $MESH_NET/8 -m tos --tos 0 -j IPID --set-ipid $MESH_NODE_ID  > /dev/null 2>/dev/null
+    $IPTABLES -D OUTPUT -t mangle -d $MESH_NET/8 -m tos --tos 0 -j TOS --set-tos 2  > /dev/null 2>/dev/null
+    $IPTABLES -A OUTPUT -t mangle -d $MESH_NET/8 -m tos --tos 0 -j IPID --set-ipid $MESH_NODE_ID  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+    $IPTABLES -A OUTPUT -t mangle -d $MESH_NET/8 -m tos --tos 0 -j TOS --set-tos 2  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+    
+fi
+
+# Restart Spines if needed
+if [ $SPINES_DOWN -ne 0 -o $SMESH_DOWN -ne 0 ]; then
+    $KILLALL -9 smesh_proxy  2>/dev/null
+    $KILLALL -9 spines 2>/dev/null
+    EXEC="$SPINES -l $MESHIP -p $SMESH_PORT -k 0 -k $KERNEL $NEIGHBORS -W $SPINES_OPTIONS -M $MEMLIMIT"
+    $EXEC >> $LOG  2>> $LOG &
+    echo "$EXEC >> $LOG  2>> $LOG" > /tmp/spines.exe
+    # If I am an internet gateway and using hybrid arch
+    if [ $HYBRID -eq 1 -a $SMESH_IGW -eq 1 ]; then
+        EXEC="$SPINES -l $WANIP -a $MESHIP -p $SMESH_PORT $HYBRID_NEIGHBORS -W $SPINES_OPTIONS -M $MEMLIMIT"
+        $EXEC >> $LOG  2>> $LOG &
+        echo "$EXEC >> $LOG  2>> $LOG" >> /tmp/spines.exe
+    fi
+    sleep 8
+fi
+
+# Clear/Set mss to 1360 for overlay mode
+$IPTABLES -D INPUT -i $MESHIF -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1360   > /dev/null 2>/dev/null
+$IPTABLES -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1360   > /dev/null 2>/dev/null
+$IPTABLES -D OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1360  > /dev/null 2>/dev/null
+if [ $KERNEL -eq 0 ]; then
+    $IPTABLES -A INPUT -i $MESHIF -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1360  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+    $IPTABLES -I FORWARD 1 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1360  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+    $IPTABLES -A OUTPUT -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1360  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+fi  
+
+# We dont care about this packets in the mesh due to overlay
+$IPTABLES -D OUTPUT -p icmp --icmp-type port-unreachable -j DROP  > /dev/null 2>/dev/null
+$IPTABLES -A OUTPUT -p icmp --icmp-type port-unreachable -j DROP  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+
+$IPTABLES -D OUTPUT -p icmp --icmp-type network-unreachable -j DROP  > /dev/null 2>/dev/null
+$IPTABLES -A OUTPUT -p icmp --icmp-type network-unreachable -j DROP  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+
+$IPTABLES -D OUTPUT -p icmp --icmp-type redirect -j DROP  > /dev/null 2>/dev/null
+$IPTABLES -A OUTPUT -p icmp --icmp-type redirect -j DROP  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+
+$IPTABLES -D OUTPUT -p icmp --icmp-type host-unreachable -j DROP  > /dev/null 2>/dev/null
+$IPTABLES -A OUTPUT -p icmp --icmp-type host-unreachable -j DROP  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+
+
+# If we are running in Overlay Mode, then discard packets that are not for a mesh node
+$IPTABLES -D FORWARD -d ! $MESHIP/24 -j DROP  > /dev/null 2>/dev/null
+if [ $KERNEL -eq 0 ]; then
+    $IPTABLES -A FORWARD -d ! $MESHIP/24 -j DROP  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+fi
+
+# Prevent Clock Drifts from NTP for event system because of bug in WRT54
+$IPTABLES -D INPUT -p tcp --dport 123 -i $WANIF -j DROP  > /dev/null 2>/dev/null
+$IPTABLES -A INPUT -p tcp --dport 123 -i $WANIF -j DROP  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+$IPTABLES -D INPUT -p udp --dport 123 -i $WANIF -j DROP  > /dev/null 2>/dev/null
+$IPTABLES -A INPUT -p udp --dport 123 -i $WANIF -j DROP  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+
+
+# Restart SMesh_Proxy
+EXEC="$SMESH_PROXY -p $SMESH_PORT -k $KERNEL -mesh_if $MESHIF $METRIC -bht $BCAST_HELLO -uht $UCAST_HELLO -max $LQMAX -ts $THRESHOLD -df $DECAYFACTOR $SMESH_SNAPSHOT $SMESH_OPTIONS "
+
+# If I am an internet gateway
+if [ $SMESH_IGW -eq 1 ]; then
+    $IPTABLES -D INPUT -p tcp -i $WANIF -j DROP  > /dev/null 2>/dev/null
+    if [ $KERNEL -eq 0 ]; then
+        # Need to block incomming TCP to the Gateway to prevent disconnections
+        $IPTABLES -A INPUT -p tcp --dport ! $SSHD_PORT -i $WANIF -j DROP  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+        $IPTABLES -D FORWARD -o $WANIF -j DROP  > /dev/null 2>/dev/null
+        $IPTABLES -A FORWARD -o $WANIF -j DROP  >> $RUNSMESH_LOG 2>> $RUNSMESH_LOG
+    else
+        # Need to enable NAT in iptables for kernel mode
+        $IPTABLES -t nat -A PREROUTING -d $WANIP -p icmp -j DNAT --to-destination $MESHIP
+        $IPTABLES -t nat -A POSTROUTING -s $MESH_NET/8 -d ! $MESH_NET/8 -j MASQUERADE
+    fi
+    EXEC="$EXEC -igw_if $WANIF $DNS $FIREWALL"
+fi
+
+$EXEC >> $LOG  2>> $LOG &
+echo "$EXEC >> $LOG  2>> $LOG" > /tmp/smesh.exe
+

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="214"
+   name=""
+   committed-date="2008-01-16T20:12:05.797224Z"
+   url="svn+ssh://cnds.jhu.edu/storage/svn/smesh/trunk/smesh_proxy/stdutil/docs"
+   last-author="nrivera"
+   kind="dir"
+   revision="219"/>
+</wc-entries>

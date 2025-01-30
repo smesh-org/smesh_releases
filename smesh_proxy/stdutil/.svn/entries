@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="214"
+   name=""
+   committed-date="2008-01-16T20:12:05.797224Z"
+   url="svn+ssh://cnds.jhu.edu/storage/svn/smesh/trunk/smesh_proxy/stdutil"
+   last-author="nrivera"
+   kind="dir"
+   revision="219"/>
+<entry
+   name="buildtools"
+   kind="dir"/>
+<entry
+   committed-rev="214"
+   name="configure"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="58224967c863dcee62e0839f2b1e936e"
+   last-author="nrivera"
+   kind="file"
+   prop-time="2008-01-16T20:11:48.000000Z"/>
+<entry
+   committed-rev="214"
+   name="configure.in"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="3a0c8dee1dadc4f7b6edc6db6a106e7f"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   name="lib"
+   kind="dir"/>
+<entry
+   name="src"
+   kind="dir"/>
+<entry
+   name="bin"
+   kind="dir"/>
+<entry
+   name="docs"
+   kind="dir"/>
+<entry
+   committed-rev="214"
+   name="STDUTIL_LICENSE"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="be2437735dfc839d881370741736a926"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="README"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="ff743db7c344d02b1aadc84cb3263eed"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="Makefile"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="b9eae4cbee0883dff292f946ae1adfb4"
+   last-author="nrivera"
+   kind="file"/>
+</wc-entries>

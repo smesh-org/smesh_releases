@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="214"
+   name=""
+   committed-date="2008-01-16T20:12:05.797224Z"
+   url="svn+ssh://cnds.jhu.edu/storage/svn/smesh/trunk/smesh_proxy/stdutil/src/stdutil/private"
+   last-author="nrivera"
+   kind="dir"
+   revision="219"/>
+<entry
+   committed-rev="214"
+   name="stdarch_autoconf.h.in"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="4d30f9cdf7993104ae48ac7ce45a41f9"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stdhash_p.h"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="892ee5c6c4a4005cf2dbc6cd930e1e1b"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stdarr_p.h"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="03e5260963a5266b09b2436737d5fc2f"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stdarch_wintel32.h"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="a3e5fd55728e2e0fb6da86a86507b593"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stdcarr_p.h"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="edaab4895a860be3b82b9b60ab9aa02b"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stdthread_p.h"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="0ba5c89cef7c1fcdde162b0d3efb0b0f"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stdskl_p.h"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="279c6c2055ca9fdfc5ec499a8933ee9b"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stddll_p.h"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="40c653223c6ace484e0d514bd3f2cc9b"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stdit_p.h"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="0405a0c61e301999357fb1264b89e98e"
+   last-author="nrivera"
+   kind="file"/>
+<entry
+   committed-rev="214"
+   name="stdarch.h"
+   text-time="2008-01-16T20:11:34.000000Z"
+   committed-date="2008-01-16T20:12:05.797224Z"
+   checksum="aee20af690be70a8014bb4cca5a049f8"
+   last-author="nrivera"
+   kind="file"/>
+</wc-entries>
